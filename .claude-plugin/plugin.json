@@ -1,0 +1,12 @@
+{
+  "name": "promo-kit-mcp",
+  "displayName": "Promo Kit MCP",
+  "description": "Generate launch promo kits with Exa research, fal.ai posters, and ElevenLabs voiceovers.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Workshop Host"
+  },
+  "homepage": "https://manufact.com",
+  "license": "MIT",
+  "skills": "./skills/"
+}
