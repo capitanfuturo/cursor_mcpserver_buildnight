@@ -1,13 +1,10 @@
 import { z } from "zod";
 
 export const propSchema = z.object({
-  query: z.string().describe("The search query"),
-  results: z.array(
-    z.object({
-      fruit: z.string().describe("Fruit name"),
-      color: z.string().describe("Tailwind background color class"),
-    })
-  ),
+  title: z.string().default("Promo Kit MCP"),
+  summary: z
+    .string()
+    .default("Research, poster generation, and voiceover tools for a workshop."),
 });
 
 export type ProductSearchResultProps = z.infer<typeof propSchema>;
