@@ -19,6 +19,8 @@ cp .env.example .env
 Add your workshop credit keys to `.env`:
 
 ```bash
+PORT=3000
+MCP_URL=http://localhost:3000
 EXA_API_KEY=...
 FAL_KEY=...
 ELEVENLABS_API_KEY=...
@@ -26,6 +28,12 @@ ELEVENLABS_VOICE_ID=...
 ```
 
 `ELEVENLABS_VOICE_ID` is optional. If omitted, the app uses a default ElevenLabs voice ID.
+
+If you use direnv, put those exports in `.envrc.local` instead and run:
+
+```bash
+direnv allow
+```
 
 Start the local server:
 
@@ -44,6 +52,8 @@ Local MCP endpoint:
 ```text
 http://localhost:3000/mcp
 ```
+
+If mcp-use reports a different port because 3000 is busy, set `PORT` in `.envrc.local` and update `mcp.json` / `.mcp.json` to match for that machine.
 
 ## Cursor Demo
 
