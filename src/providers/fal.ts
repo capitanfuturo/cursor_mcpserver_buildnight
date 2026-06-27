@@ -45,6 +45,7 @@ export async function generatePoster(input: {
   }
 
   return {
+    provider: "fal",
     prompt,
     imageUrl,
     visualStyle: input.visualStyle,

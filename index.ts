@@ -2,14 +2,14 @@ import { MCPServer, object } from "mcp-use/server";
 import { z } from "zod";
 import { generateVoiceover as createVoiceover } from "./src/providers/elevenlabs";
 import { researchMarket as searchMarket } from "./src/providers/exa";
-import { generatePoster as createPoster } from "./src/providers/fal";
+import { createCampaignVisual } from "./src/providers/images";
 
 const server = new MCPServer({
   name: "promo-kit-mcp-finished",
   title: "Promo Kit MCP",
   version: "1.0.0",
   description:
-    "Generate research-backed promo kits with Exa, fal.ai, and ElevenLabs.",
+    "Generate research-backed promo kits with Exa, Unsplash or fal.ai, and ElevenLabs.",
   instructions:
     "Use create_promo_kit for complete campaign kits. Use the individual tools for research-only, poster-only, or voiceover-only requests.",
   baseUrl: process.env.MCP_URL || "http://localhost:3000",
@@ -40,10 +40,15 @@ const researchSchema = z.object({
 });
 
 const posterSchema = z.object({
+  provider: z.enum(["fal", "unsplash", "placeholder"]),
   prompt: z.string(),
   imageUrl: z.string(),
   visualStyle: z.string(),
   format: z.string(),
+  sourceUrl: z.string().optional(),
+  photographerName: z.string().optional(),
+  photographerUrl: z.string().optional(),
+  attribution: z.string().optional(),
 });
 
 const voiceoverSchema = z.object({
@@ -108,7 +113,8 @@ server.tool(
 server.tool(
   {
     name: "generate_poster",
-    description: "Use fal.ai to generate a poster image for a campaign brief.",
+    description:
+      "Create a campaign visual. Defaults to Unsplash stock imagery; set IMAGE_PROVIDER=fal to use fal.ai generation.",
     schema: z.object({
       brief: z.string().describe("Creative brief for the poster"),
       visualStyle: z
@@ -124,7 +130,7 @@ server.tool(
     outputSchema: posterSchema,
   },
   async ({ brief, visualStyle, format }) => {
-    return object(await createPoster({ brief, visualStyle, format }));
+    return object(await createCampaignVisual({ brief, visualStyle, format }));
   }
 );
 
@@ -156,7 +162,7 @@ server.tool(
   {
     name: "create_promo_kit",
     description:
-      "Create a complete promo kit with Exa research, fal.ai poster generation, and ElevenLabs voiceover.",
+      "Create a complete promo kit with Exa research, Unsplash or fal.ai campaign visuals, and ElevenLabs voiceover.",
     schema: z.object({
       topic: z.string().describe("Campaign topic, event, or product"),
       audience: z.string().describe("Target audience"),
@@ -179,7 +185,7 @@ server.tool(
     });
 
     const positioning = `${research.angle}. Tone: ${tone}.`;
-    const poster = await createPoster({
+    const poster = await createCampaignVisual({
       brief: `${topic} for ${audience} in ${location}. ${research.angle}.`,
       visualStyle:
         "bold editorial poster, local city energy, confident typography space, premium but approachable",

@@ -14,10 +14,15 @@ export type MarketResearch = {
 };
 
 export type PosterResult = {
+  provider: "fal" | "unsplash" | "placeholder";
   prompt: string;
   imageUrl: string;
   visualStyle: string;
   format: string;
+  sourceUrl?: string;
+  photographerName?: string;
+  photographerUrl?: string;
+  attribution?: string;
 };
 
 export type VoiceoverResult = {

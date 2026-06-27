@@ -5,7 +5,8 @@ Finished reference project for the MCP build night. This Manufact/mcp-use app cr
 It combines:
 
 - Exa for web research and source summaries
-- fal.ai for poster image generation
+- Unsplash for campaign visuals by default
+- optional fal.ai support for generated poster images
 - ElevenLabs for voice ad generation
 - MCP as the agent tool interface
 
@@ -21,13 +22,16 @@ Add your workshop credit keys to `.env`:
 ```bash
 PORT=3000
 MCP_URL=http://localhost:3000
+IMAGE_PROVIDER=unsplash
 EXA_API_KEY=...
+UNSPLASH_ACCESS_KEY=...
 FAL_KEY=...
 ELEVENLABS_API_KEY=...
 ELEVENLABS_VOICE_ID=...
 ```
 
 `ELEVENLABS_VOICE_ID` is optional. If omitted, the app uses a default ElevenLabs voice ID.
+`FAL_KEY` is optional unless you set `IMAGE_PROVIDER=fal`.
 
 If you use direnv, put those exports in `.envrc.local` instead and run:
 
@@ -90,7 +94,7 @@ Include a research-backed angle, poster visual, short ad script, and voiceover.
 - title and positioning
 - three social captions
 - Exa-backed research with source links
-- fal.ai poster prompt and image URL
+- Unsplash image URL with attribution, or fal.ai poster prompt and image URL when `IMAGE_PROVIDER=fal`
 - ElevenLabs voiceover script and audio data URL
 
 ## Demo Prompts
@@ -124,6 +128,14 @@ fal.ai returned no image URL.
 ```
 
 Fix: retry with a shorter prompt or check fal.ai credits.
+
+Unsplash returns no image:
+
+```text
+Unsplash returned no image
+```
+
+Fix: use a simpler campaign brief or visual style.
 
 ElevenLabs returns an auth or quota error:
 
