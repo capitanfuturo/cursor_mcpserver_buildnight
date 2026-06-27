@@ -75,9 +75,11 @@ function voiceScript(input: {
   location: string;
   tone: string;
 }): string {
+  const tone = input.tone.replace(/\band practical\b/i, "").trim() || input.tone;
+
   return [
     `This week in ${input.location}, ${input.topic} is built for ${input.audience}.`,
-    `Expect something ${input.tone}, practical, and easy to share.`,
+    `Expect something ${tone}, practical, and easy to share.`,
     "Bring one friend, show up curious, and leave with something worth talking about.",
   ].join(" ");
 }

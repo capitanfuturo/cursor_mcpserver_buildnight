@@ -30,6 +30,24 @@ async function requestSpeech(input: {
   );
 }
 
+function conciseTtsError(errorText: string): string {
+  try {
+    const parsed = JSON.parse(errorText) as {
+      detail?: {
+        message?: string;
+        status?: string;
+        code?: string;
+      };
+    };
+    const detail = parsed.detail;
+    const message = detail?.message || errorText;
+    const status = detail?.status || detail?.code;
+    return status ? `${message} (${status})` : message;
+  } catch {
+    return errorText;
+  }
+}
+
 export async function generateVoiceover(input: {
   script: string;
   voiceId?: string;
@@ -71,8 +89,10 @@ export async function generateVoiceover(input: {
       audioUrl: "",
       voiceId,
       language: input.language,
-      error: `ElevenLabs TTS unavailable. Primary error: ${firstError}${
-        fallbackError ? ` Fallback error: ${fallbackError}` : ""
+      error: `ElevenLabs TTS unavailable. Primary: ${conciseTtsError(
+        firstError
+      )}${
+        fallbackError ? ` Fallback: ${conciseTtsError(fallbackError)}` : ""
       }`,
     };
   }
