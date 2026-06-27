@@ -35,6 +35,27 @@ function formatQuery(input: {
     .trim();
 }
 
+function queryCandidates(input: {
+  brief: string;
+  visualStyle: string;
+  format: string;
+}): string[] {
+  const briefWords = input.brief
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2)
+    .slice(0, 8)
+    .join(" ");
+
+  return [
+    formatQuery(input),
+    briefWords,
+    "students workshop laptops",
+    "creative workshop event",
+    "people collaborating laptop",
+  ].filter(Boolean);
+}
+
 async function trackDownload(photo: UnsplashPhoto, apiKey: string): Promise<void> {
   const location = photo.links?.download_location;
 
@@ -56,53 +77,59 @@ export async function sourcePosterImage(input: {
   format: string;
 }): Promise<PosterResult> {
   const apiKey = requireApiKey("Unsplash");
-  const query = formatQuery(input);
-  const params = new URLSearchParams({
-    query,
-    per_page: "1",
-    orientation: input.format.toLowerCase().includes("square")
-      ? "squarish"
-      : "landscape",
-  });
+  const orientation = input.format.toLowerCase().includes("square")
+    ? "squarish"
+    : "landscape";
 
-  const response = await fetch(
-    `https://api.unsplash.com/search/photos?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Client-ID ${apiKey}`,
-        "Accept-Version": "v1",
-      },
-    }
-  );
+  let lastError = "";
+  for (const query of queryCandidates(input)) {
+    const params = new URLSearchParams({
+      query,
+      per_page: "1",
+      orientation,
+    });
 
-  if (!response.ok) {
-    throw new Error(
-      `Unsplash search failed (${response.status}): ${await response.text()}`
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Client-ID ${apiKey}`,
+          "Accept-Version": "v1",
+        },
+      }
     );
+
+    if (!response.ok) {
+      lastError = `Unsplash search failed (${response.status}): ${await response.text()}`;
+      continue;
+    }
+
+    const payload = (await response.json()) as UnsplashSearchResponse;
+    const photo = payload.results?.[0];
+    const imageUrl = photo?.urls?.regular || photo?.urls?.full;
+
+    if (!photo || !imageUrl) {
+      lastError = `Unsplash returned no image for "${query}".`;
+      continue;
+    }
+
+    await trackDownload(photo, apiKey);
+
+    const photographerName = photo.user?.name || "Unknown photographer";
+    const photographerUrl = photo.user?.links?.html;
+
+    return {
+      provider: "unsplash",
+      prompt: query,
+      imageUrl,
+      visualStyle: input.visualStyle,
+      format: input.format,
+      sourceUrl: photo.links?.html,
+      photographerName,
+      photographerUrl,
+      attribution: `Photo by ${photographerName} on Unsplash`,
+    };
   }
 
-  const payload = (await response.json()) as UnsplashSearchResponse;
-  const photo = payload.results?.[0];
-  const imageUrl = photo?.urls?.regular || photo?.urls?.full;
-
-  if (!photo || !imageUrl) {
-    throw new Error(`Unsplash returned no image for "${query}".`);
-  }
-
-  await trackDownload(photo, apiKey);
-
-  const photographerName = photo.user?.name || "Unknown photographer";
-  const photographerUrl = photo.user?.links?.html;
-
-  return {
-    provider: "unsplash",
-    prompt: query,
-    imageUrl,
-    visualStyle: input.visualStyle,
-    format: input.format,
-    sourceUrl: photo.links?.html,
-    photographerName,
-    photographerUrl,
-    attribution: `Photo by ${photographerName} on Unsplash`,
-  };
+  throw new Error(lastError || "Unsplash returned no image.");
 }

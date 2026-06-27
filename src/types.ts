@@ -26,10 +26,12 @@ export type PosterResult = {
 };
 
 export type VoiceoverResult = {
+  status: "generated" | "unavailable";
   script: string;
   audioUrl: string;
   voiceId: string;
   language: string;
+  error?: string;
 };
 
 export type PromoKit = {

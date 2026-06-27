@@ -52,10 +52,12 @@ const posterSchema = z.object({
 });
 
 const voiceoverSchema = z.object({
+  status: z.enum(["generated", "unavailable"]),
   script: z.string(),
   audioUrl: z.string(),
   voiceId: z.string(),
   language: z.string(),
+  error: z.string().optional(),
 });
 
 const promoKitSchema = z.object({

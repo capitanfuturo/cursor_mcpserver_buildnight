@@ -1,22 +1,22 @@
 import { elevenLabsVoiceId, requireApiKey } from "../config";
 import type { VoiceoverResult } from "../types";
 
-export async function generateVoiceover(input: {
+const fallbackVoiceId = "TX3LPaxmHKxFdv7VOQHJ";
+
+async function requestSpeech(input: {
+  apiKey: string;
+  voiceId: string;
   script: string;
-  voiceId?: string;
-  language: string;
-}): Promise<VoiceoverResult> {
-  const apiKey = requireApiKey("ElevenLabs");
-  const voiceId = elevenLabsVoiceId(input.voiceId);
-  const response = await fetch(
+}): Promise<Response> {
+  return fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(
-      voiceId
+      input.voiceId
     )}?output_format=mp3_44100_128`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "xi-api-key": apiKey,
+        "xi-api-key": input.apiKey,
       },
       body: JSON.stringify({
         text: input.script,
@@ -28,16 +28,59 @@ export async function generateVoiceover(input: {
       }),
     }
   );
+}
+
+export async function generateVoiceover(input: {
+  script: string;
+  voiceId?: string;
+  language: string;
+}): Promise<VoiceoverResult> {
+  const apiKey = requireApiKey("ElevenLabs");
+  const voiceId = elevenLabsVoiceId(input.voiceId);
+  let response = await requestSpeech({ apiKey, voiceId, script: input.script });
 
   if (!response.ok) {
-    throw new Error(
-      `ElevenLabs TTS failed (${response.status}): ${await response.text()}`
-    );
+    const firstError = await response.text();
+
+    if (voiceId !== fallbackVoiceId) {
+      response = await requestSpeech({
+        apiKey,
+        voiceId: fallbackVoiceId,
+        script: input.script,
+      });
+
+      if (response.ok) {
+        const audio = Buffer.from(await response.arrayBuffer()).toString(
+          "base64"
+        );
+
+        return {
+          status: "generated",
+          script: input.script,
+          audioUrl: `data:audio/mpeg;base64,${audio}`,
+          voiceId: fallbackVoiceId,
+          language: input.language,
+        };
+      }
+    }
+
+    const fallbackError = response.ok ? "" : await response.text();
+    return {
+      status: "unavailable",
+      script: input.script,
+      audioUrl: "",
+      voiceId,
+      language: input.language,
+      error: `ElevenLabs TTS unavailable. Primary error: ${firstError}${
+        fallbackError ? ` Fallback error: ${fallbackError}` : ""
+      }`,
+    };
   }
 
   const audio = Buffer.from(await response.arrayBuffer()).toString("base64");
 
   return {
+    status: "generated",
     script: input.script,
     audioUrl: `data:audio/mpeg;base64,${audio}`,
     voiceId,

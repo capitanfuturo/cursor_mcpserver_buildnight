@@ -95,7 +95,7 @@ Include a research-backed angle, poster visual, short ad script, and voiceover.
 - three social captions
 - Exa-backed research with source links
 - Unsplash image URL with attribution, or fal.ai poster prompt and image URL when `IMAGE_PROVIDER=fal`
-- ElevenLabs voiceover script and audio data URL
+- ElevenLabs voiceover script, plus an audio data URL when the current key and voice have enough API access
 
 ## Demo Prompts
 
@@ -143,7 +143,9 @@ ElevenLabs returns an auth or quota error:
 ElevenLabs TTS failed (401 or 429)
 ```
 
-Fix: verify the API key, voice ID, and account credits.
+The server now keeps the promo kit usable when TTS is unavailable. The voiceover object returns `status: "unavailable"`, keeps the script, and includes the provider error for troubleshooting.
+
+Fix: verify the API key, voice ID, account tier, and remaining credits.
 
 Build warning about large chunks:
 
