@@ -64,6 +64,12 @@ In another terminal, run the preflight smoke test:
 npm run smoke
 ```
 
+To verify the Langfuse request shape without real Langfuse keys:
+
+```bash
+npm run test:langfuse
+```
+
 Open the inspector:
 
 ```text

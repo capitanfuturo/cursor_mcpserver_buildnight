@@ -18,6 +18,7 @@ In another terminal:
 
 ```bash
 npm run smoke
+npm run test:langfuse
 ```
 
 Open:
@@ -74,3 +75,5 @@ This is acceptable for the workshop because the main generation and benchmarking
 - `demoReady: true`
 - a numeric judge `score`
 - `langfuse.dryRun` or `langfuse.sent`
+
+`npm run test:langfuse` should print JSON with `ok: true`, `calls: 4`, one trace ingestion endpoint, and three score names.
