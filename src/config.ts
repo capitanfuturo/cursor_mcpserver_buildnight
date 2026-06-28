@@ -24,7 +24,7 @@ export function elevenLabsVoiceId(override?: string): string {
   return (
     override ||
     process.env.ELEVENLABS_VOICE_ID ||
-    "21m00Tcm4TlvDq8ikWAM"
+    "TX3LPaxmHKxFdv7VOQHJ"
   );
 }
 

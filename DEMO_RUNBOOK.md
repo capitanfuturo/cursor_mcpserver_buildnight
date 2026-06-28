@@ -29,6 +29,22 @@ http://localhost:3022/inspector?autoConnect=http%3A%2F%2Flocalhost%3A3022%2Fmcp
 
 If you use another port, open the Inspector URL printed by `npm run dev`.
 
+Optional visual client:
+
+```bash
+MCP_SERVER_URL=http://localhost:3022 npm run web
+```
+
+Open:
+
+```text
+http://localhost:5174
+```
+
+This web UI is a small local client that calls the MCP server tools. Use it to
+show the difference between the MCP inspector, which is a developer console, and
+an application that consumes the MCP server.
+
 ## 2. Presenter Flow
 
 1. Call `get_workshop_flow`.
@@ -36,6 +52,14 @@ If you use another port, open the Inspector URL printed by `npm run dev`.
 3. Call `list_demo_presets`.
 4. Call `run_demo_preset` with `cursor-build-night-padova`.
 5. Call `create_and_evaluate_promo_kit` with a custom brief.
+
+For the visual UI demo:
+
+1. Open `http://localhost:5174`.
+2. Click `Generate Kit` with the Cursor Build Night preset.
+3. Show the Exa-backed research sources, Unsplash image preview, ElevenLabs
+   audio player, quality score, and Langfuse status.
+4. Change the brief and generate a custom kit.
 
 Suggested custom brief:
 

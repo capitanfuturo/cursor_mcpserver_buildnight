@@ -31,7 +31,7 @@ EXA_API_KEY=...
 UNSPLASH_ACCESS_KEY=...
 FAL_KEY=...
 ELEVENLABS_API_KEY=...
-ELEVENLABS_VOICE_ID=...
+ELEVENLABS_VOICE_ID=TX3LPaxmHKxFdv7VOQHJ
 JUDGE_PROVIDER=heuristic
 OPENAI_API_KEY=
 JUDGE_MODEL=gpt-4o-mini
@@ -40,7 +40,7 @@ LANGFUSE_SECRET_KEY=
 LANGFUSE_BASE_URL=https://cloud.langfuse.com
 ```
 
-`ELEVENLABS_VOICE_ID` is optional. If omitted, the app uses a default ElevenLabs voice ID.
+`ELEVENLABS_VOICE_ID` is optional. The example value is a premade voice that worked with the free-plan key during testing.
 `FAL_KEY` is optional unless you set `IMAGE_PROVIDER=fal`.
 Langfuse and OpenAI are optional. Without them, the benchmark still works with a local heuristic judge and returns `langfuse.sent: false`.
 When Langfuse keys are missing, `langfuse.dryRun: true` shows the trace name and score names that would be sent.
@@ -83,6 +83,42 @@ http://localhost:3000/mcp
 ```
 
 If mcp-use reports a different port because 3000 is busy, set `PORT` in `.envrc.local` and update `mcp.json` / `.mcp.json` to match for that machine.
+
+## Optional Web UI
+
+The MCP inspector is a developer console, not the product UI. This repo also
+includes a tiny local web app that calls the same MCP tools through a local
+proxy, so you can showcase the MCP server and a real client side by side.
+
+Start the MCP server first:
+
+```bash
+PORT=3022 MCP_URL=http://localhost:3022 npm run dev
+```
+
+Then start the web UI in another terminal:
+
+```bash
+MCP_SERVER_URL=http://localhost:3022 npm run web
+```
+
+Open:
+
+```text
+http://localhost:5174
+```
+
+The UI can:
+
+- run `check_setup`
+- load `list_demo_presets`
+- call `run_demo_preset`
+- call `create_and_evaluate_promo_kit`
+- call `research_market`
+- call `generate_voiceover`
+
+This is intentionally small enough for attendees to modify with Cursor during
+the workshop.
 
 ## Cursor Demo
 

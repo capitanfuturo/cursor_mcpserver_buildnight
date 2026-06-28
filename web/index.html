@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Promo Kit MCP Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel controls-panel">
+        <div class="masthead">
+          <p class="eyebrow">Local MCP client</p>
+          <h1>Promo Kit Demo</h1>
+          <p class="lede">
+            A tiny web app that calls the same MCP tools you see in the
+            inspector.
+          </p>
+        </div>
+
+        <div class="status-strip" id="setupStatus">
+          <span class="status-dot status-dot--idle"></span>
+          <span>Checking MCP server...</span>
+        </div>
+
+        <div class="field-group">
+          <label for="preset">Demo preset</label>
+          <select id="preset">
+            <option value="">Custom brief</option>
+          </select>
+        </div>
+
+        <div class="form-grid">
+          <div class="field-group">
+            <label for="topic">Topic</label>
+            <input id="topic" value="cursor build night" />
+          </div>
+          <div class="field-group">
+            <label for="audience">Audience</label>
+            <input id="audience" value="developers" />
+          </div>
+          <div class="field-group">
+            <label for="location">Location</label>
+            <input id="location" value="Padova, Italy" />
+          </div>
+          <div class="field-group">
+            <label for="tone">Tone</label>
+            <input id="tone" value="energetic and practical" />
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="generateButton" type="button">Generate Kit</button>
+          <button id="researchButton" class="secondary" type="button">
+            Research Only
+          </button>
+          <button id="voiceButton" class="secondary" type="button">
+            Test Voice
+          </button>
+        </div>
+
+        <p class="hint">
+          Start the MCP server first, then run this app. The UI proxies
+          browser calls to <code>/mcp</code>.
+        </p>
+      </section>
+
+      <section class="results-grid">
+        <article class="panel poster-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Campaign visual</p>
+            <h2 id="kitTitle">Waiting for a promo kit</h2>
+          </div>
+          <div class="image-frame">
+            <img id="posterImage" alt="" />
+            <div id="imagePlaceholder">Image preview appears here</div>
+          </div>
+          <p id="posterMeta" class="meta"></p>
+        </article>
+
+        <article class="panel score-panel">
+          <p class="eyebrow">Quality check</p>
+          <div class="score-lockup">
+            <span id="scoreValue">--</span>
+            <span id="scoreLabel">No score yet</span>
+          </div>
+          <p id="positioningText" class="body-copy">
+            Generate a kit to see positioning, judge feedback, and Langfuse
+            status.
+          </p>
+          <div id="langfuseStatus" class="mini-status"></div>
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Research</p>
+          <ul id="insightsList" class="clean-list"></ul>
+          <div id="sourcesList" class="sources-list"></div>
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Voice ad</p>
+          <p id="voiceScript" class="body-copy"></p>
+          <audio id="voiceAudio" controls></audio>
+          <p id="voiceMeta" class="meta"></p>
+        </article>
+
+        <article class="panel full-span">
+          <p class="eyebrow">Social captions</p>
+          <div id="captionsList" class="caption-grid"></div>
+        </article>
+      </section>
+    </main>
+
+    <template id="sourceTemplate">
+      <a class="source-item" target="_blank" rel="noreferrer">
+        <strong></strong>
+        <span></span>
+      </a>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

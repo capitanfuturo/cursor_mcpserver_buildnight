@@ -105,7 +105,8 @@ export async function generateVoiceover(input: {
       }
     }
 
-    const fallbackError = response.ok ? "" : await response.text();
+    const fallbackError =
+      response.ok || voiceId === fallbackVoiceId ? "" : await response.text();
     return {
       status: "unavailable",
       script: input.script,
