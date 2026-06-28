@@ -55,6 +55,12 @@ Start the local server:
 npm run dev
 ```
 
+In another terminal, run the preflight smoke test:
+
+```bash
+npm run smoke
+```
+
 Open the inspector:
 
 ```text

@@ -10,6 +10,12 @@ direnv allow
 npm run dev
 ```
 
+In another terminal:
+
+```bash
+npm run smoke
+```
+
 Open:
 
 ```text
@@ -54,3 +60,13 @@ With the current local keys:
 - Langfuse returns `enabled: false` and `dryRun: true` until `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured.
 
 This is acceptable for the workshop because the main generation and benchmarking path still completes.
+
+## 5. Preflight Pass Criteria
+
+`npm run smoke` should print JSON with:
+
+- `ok: true`
+- `tools: 10`
+- `demoReady: true`
+- a numeric judge `score`
+- `langfuse.dryRun` or `langfuse.sent`
