@@ -40,8 +40,15 @@ function conciseTtsError(errorText: string): string {
       };
     };
     const detail = parsed.detail;
-    const message = detail?.message || errorText;
     const status = detail?.status || detail?.code;
+    if (status === "free_users_not_allowed") {
+      return "The selected voice requires an ElevenLabs Creator tier or above. (free_users_not_allowed)";
+    }
+    if (status === "quota_exceeded") {
+      return "The ElevenLabs account does not have enough remaining credits for this request. (quota_exceeded)";
+    }
+
+    const message = detail?.message || errorText;
     return status ? `${message} (${status})` : message;
   } catch {
     return errorText;
@@ -53,7 +60,23 @@ export async function generateVoiceover(input: {
   voiceId?: string;
   language: string;
 }): Promise<VoiceoverResult> {
-  const apiKey = requireApiKey("ElevenLabs");
+  let apiKey: string;
+  try {
+    apiKey = requireApiKey("ElevenLabs");
+  } catch (error) {
+    return {
+      status: "unavailable",
+      script: input.script,
+      audioUrl: "",
+      voiceId: elevenLabsVoiceId(input.voiceId),
+      language: input.language,
+      error:
+        error instanceof Error
+          ? error.message
+          : "ELEVENLABS_API_KEY is required for live voiceover audio.",
+    };
+  }
+
   const voiceId = elevenLabsVoiceId(input.voiceId);
   let response = await requestSpeech({ apiKey, voiceId, script: input.script });
 
@@ -89,10 +112,12 @@ export async function generateVoiceover(input: {
       audioUrl: "",
       voiceId,
       language: input.language,
-      error: `ElevenLabs TTS unavailable. Primary: ${conciseTtsError(
+      error: `ElevenLabs audio unavailable. Primary voice: ${conciseTtsError(
         firstError
       )}${
-        fallbackError ? ` Fallback: ${conciseTtsError(fallbackError)}` : ""
+        fallbackError
+          ? ` Fallback voice: ${conciseTtsError(fallbackError)}`
+          : ""
       }`,
     };
   }

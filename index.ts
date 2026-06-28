@@ -4,6 +4,7 @@ import {
   evaluateWithHeuristics,
   evaluateWithOpenAI,
 } from "./src/evaluation";
+import { imageProvider } from "./src/config";
 import { generateVoiceover as createVoiceover } from "./src/providers/elevenlabs";
 import { researchMarket as searchMarket } from "./src/providers/exa";
 import { createCampaignVisual } from "./src/providers/images";
@@ -104,6 +105,23 @@ const benchmarkSchema = z.object({
   langfuse: langfuseSchema,
 });
 
+const setupProviderSchema = z.object({
+  name: z.string(),
+  envVar: z.string(),
+  configured: z.boolean(),
+  required: z.boolean(),
+  note: z.string(),
+});
+
+const setupStatusSchema = z.object({
+  imageProvider: z.enum(["unsplash", "fal"]),
+  judgeProvider: z.enum(["heuristic", "openai"]),
+  demoReady: z.boolean(),
+  missingRequired: z.array(z.string()),
+  providers: z.array(setupProviderSchema),
+  warnings: z.array(z.string()),
+});
+
 const presetIdSchema = z.enum([
   "cursor-build-night-padova",
   "student-ai-build-night-rome",
@@ -151,17 +169,142 @@ const presets = {
   }
 >;
 
+function isConfigured(envVar: string): boolean {
+  return Boolean(process.env[envVar]?.trim());
+}
+
+function buildSetupStatus(): z.infer<typeof setupStatusSchema> {
+  const selectedImageProvider = imageProvider();
+  const selectedJudgeProvider =
+    process.env.JUDGE_PROVIDER?.toLowerCase() === "openai"
+      ? "openai"
+      : "heuristic";
+
+  const providers = [
+    {
+      name: "Exa",
+      envVar: "EXA_API_KEY",
+      configured: isConfigured("EXA_API_KEY"),
+      required: true,
+      note: "Required for live market research.",
+    },
+    {
+      name: "Unsplash",
+      envVar: "UNSPLASH_ACCESS_KEY",
+      configured: isConfigured("UNSPLASH_ACCESS_KEY"),
+      required: selectedImageProvider === "unsplash",
+      note: "Required when IMAGE_PROVIDER=unsplash.",
+    },
+    {
+      name: "fal.ai",
+      envVar: "FAL_KEY",
+      configured: isConfigured("FAL_KEY"),
+      required: selectedImageProvider === "fal",
+      note: "Only required when IMAGE_PROVIDER=fal.",
+    },
+    {
+      name: "ElevenLabs",
+      envVar: "ELEVENLABS_API_KEY",
+      configured: isConfigured("ELEVENLABS_API_KEY"),
+      required: false,
+      note: "Optional for workshop flow; unavailable audio keeps the script.",
+    },
+    {
+      name: "OpenAI judge",
+      envVar: "OPENAI_API_KEY",
+      configured: isConfigured("OPENAI_API_KEY"),
+      required: selectedJudgeProvider === "openai",
+      note: "Only required when JUDGE_PROVIDER=openai.",
+    },
+    {
+      name: "Langfuse public key",
+      envVar: "LANGFUSE_PUBLIC_KEY",
+      configured: isConfigured("LANGFUSE_PUBLIC_KEY"),
+      required: false,
+      note: "Optional observability for traces and scores.",
+    },
+    {
+      name: "Langfuse secret key",
+      envVar: "LANGFUSE_SECRET_KEY",
+      configured: isConfigured("LANGFUSE_SECRET_KEY"),
+      required: false,
+      note: "Optional observability for traces and scores.",
+    },
+  ];
+
+  const missingRequired = providers
+    .filter((provider) => provider.required && !provider.configured)
+    .map((provider) => provider.envVar);
+
+  const warnings = [
+    !isConfigured("ELEVENLABS_API_KEY")
+      ? "ElevenLabs is not configured, so voiceover tools will return a script with status unavailable."
+      : "",
+    isConfigured("ELEVENLABS_API_KEY")
+      ? "ElevenLabs account tier, selected voice, or remaining credits may still prevent audio generation."
+      : "",
+    !isConfigured("LANGFUSE_PUBLIC_KEY") || !isConfigured("LANGFUSE_SECRET_KEY")
+      ? "Langfuse is optional and currently disabled; benchmark results still return locally."
+      : "",
+  ].filter(Boolean);
+
+  return {
+    imageProvider: selectedImageProvider,
+    judgeProvider: selectedJudgeProvider,
+    demoReady: missingRequired.length === 0,
+    missingRequired,
+    providers,
+    warnings,
+  };
+}
+
+function formatList(items: string[]): string {
+  if (items.length <= 1) {
+    return items[0] || "";
+  }
+
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function indefiniteArticle(phrase: string): "A" | "An" {
+  return /^[aeiou]/i.test(phrase.trim()) ? "An" : "A";
+}
+
+function toneQualities(tone: string): string {
+  const qualities = tone
+    .split(/\s*(?:,|\band\b)\s*/i)
+    .map((quality) => quality.trim())
+    .filter(Boolean);
+  const seen = new Set<string>();
+  const deduped = qualities.filter((quality) => {
+    const key = quality.toLowerCase();
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+
+  if (!deduped.some((quality) => quality.toLowerCase() === "practical")) {
+    deduped.push("practical");
+  }
+
+  return formatList(deduped);
+}
+
 function voiceScript(input: {
   topic: string;
   audience: string;
   location: string;
   tone: string;
 }): string {
-  const tone = input.tone.replace(/\band practical\b/i, "").trim() || input.tone;
-
   return [
     `This week in ${input.location}, ${input.topic} is built for ${input.audience}.`,
-    `Expect something ${tone}, practical, and easy to share.`,
+    `Expect something ${toneQualities(input.tone)}, built to be easy to share.`,
     "Bring one friend, show up curious, and leave with something worth talking about.",
   ].join(" ");
 }
@@ -198,7 +341,9 @@ async function buildPromoKit(input: {
     positioning,
     captions: [
       `${input.topic} lands in ${input.location}. Bring a friend and make the night count.`,
-      `A ${input.tone} plan for ${input.audience}: ${input.topic}.`,
+      `${indefiniteArticle(toneQualities(input.tone))} ${toneQualities(
+        input.tone
+      )} campaign for ${input.audience}: ${input.topic}.`,
       `Save this: ${input.topic} is your next ${input.location} move.`,
     ],
     research,
@@ -230,6 +375,22 @@ async function judgePromoKit(input: {
 
   return evaluateWithHeuristics(input);
 }
+
+server.tool(
+  {
+    name: "check_setup",
+    description:
+      "Check which workshop provider keys are configured without exposing secret values.",
+    schema: z.object({}),
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
+    outputSchema: setupStatusSchema,
+  },
+  async () => object(buildSetupStatus())
+);
 
 server.tool(
   {

@@ -11,7 +11,7 @@ The local MCP server should be running first:
 npm run dev
 ```
 
-Use `run_demo_preset` for the easiest non-technical workshop demo. Use `create_and_evaluate_promo_kit` when the user wants custom inputs. Both create a complete kit, evaluate it with an LLM-as-a-judge style rubric, and send scores to Langfuse when configured.
+Use `check_setup` first to verify provider readiness without exposing secrets. Then use `run_demo_preset` for the easiest non-technical workshop demo. Use `create_and_evaluate_promo_kit` when the user wants custom inputs. Both create a complete kit, evaluate it with an LLM-as-a-judge style rubric, and send scores to Langfuse when configured.
 
 Use `create_promo_kit` only for generation without benchmarking. Use individual tools only when the user asks for one asset:
 
@@ -21,6 +21,7 @@ Use `create_promo_kit` only for generation without benchmarking. Use individual 
 - `create_promo_kit`: orchestrates research, poster, captions, script, and voiceover
 - `evaluate_promo_kit`: judges a pasted JSON promo kit
 - `create_and_evaluate_promo_kit`: full generation plus benchmark
+- `check_setup`: provider readiness check without secret values
 - `list_demo_presets`: available demo scenarios
 - `run_demo_preset`: one-click preset demo
 

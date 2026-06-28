@@ -85,12 +85,20 @@ Use `mcp.json` to connect Cursor to the local server:
 Then ask Cursor Agent:
 
 ```text
+Use check_setup first. Then use run_demo_preset with cursor-build-night-padova.
+Show the promo kit, the judge score, and whether Langfuse received the trace.
+```
+
+Or, for the shortest possible demo:
+
+```text
 Use run_demo_preset with cursor-build-night-padova.
 Show the promo kit, the judge score, and whether Langfuse received the trace.
 ```
 
 ## Tools
 
+- `check_setup()`
 - `research_market(topic, audience, location, maxResults)`
 - `generate_poster(brief, visualStyle, format)`
 - `generate_voiceover(script, voiceId, language)`
@@ -196,6 +204,14 @@ judge: "heuristic"
 ```
 
 This is expected for the workshop. Set `JUDGE_PROVIDER=openai` and `OPENAI_API_KEY` only if you want a live LLM judge instead of the deterministic rubric.
+
+Check setup before a live demo:
+
+```text
+check_setup()
+```
+
+This reports which providers are configured without exposing key values. Exa and the selected image provider are required for the finished live demo. ElevenLabs, OpenAI judge, and Langfuse can be unavailable without breaking the main promo kit flow.
 
 Build warning about large chunks:
 
