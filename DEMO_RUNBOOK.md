@@ -42,7 +42,7 @@ tone: warm and social
 - Unsplash supplies a usable visual when fal.ai is unavailable.
 - ElevenLabs attempts voice generation; if account limits block audio, the server keeps the script and marks voiceover as unavailable.
 - The judge turns subjective output quality into visible rubric scores.
-- Langfuse stores the trace and scores when keys are configured; otherwise the local benchmark still works.
+- Langfuse stores the trace and scores when keys are configured; otherwise `dryRun: true` shows the trace and score names that would be sent.
 
 ## 4. Known Live-Demo State
 
@@ -51,6 +51,6 @@ With the current local keys:
 - Exa works.
 - Unsplash works.
 - ElevenLabs may return `status: "unavailable"` because of voice tier or quota limits.
-- Langfuse returns `enabled: false` until `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured.
+- Langfuse returns `enabled: false` and `dryRun: true` until `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured.
 
 This is acceptable for the workshop because the main generation and benchmarking path still completes.

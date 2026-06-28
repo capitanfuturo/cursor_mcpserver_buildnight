@@ -11,7 +11,7 @@ The local MCP server should be running first:
 npm run dev
 ```
 
-Use `get_workshop_flow` first when orienting a new attendee. Use `check_setup` next to verify provider readiness without exposing secrets. Then use `run_demo_preset` for the easiest non-technical workshop demo. Use `create_and_evaluate_promo_kit` when the user wants custom inputs. Both create a complete kit, evaluate it with an LLM-as-a-judge style rubric, and send scores to Langfuse when configured.
+Use `get_workshop_flow` first when orienting a new attendee. Use `check_setup` next to verify provider readiness without exposing secrets. Then use `run_demo_preset` for the easiest non-technical workshop demo. Use `create_and_evaluate_promo_kit` when the user wants custom inputs. Both create a complete kit, evaluate it with an LLM-as-a-judge style rubric, and send scores to Langfuse when configured. When Langfuse is not configured, explain `langfuse.dryRun`, `traceName`, `scoreNames`, and `scoreCount`.
 
 Use `create_promo_kit` only for generation without benchmarking. Use individual tools only when the user asks for one asset:
 
@@ -33,4 +33,4 @@ Run the cursor-build-night-padova preset.
 Include a research-backed angle, poster visual, short ad script, voiceover status, judge score, and Langfuse status.
 ```
 
-When presenting results, include the positioning, captions, source links, visual image URL, image attribution, voiceover status, overall judge score, strongest score, weakest score, and Langfuse status.
+When presenting results, include the positioning, captions, source links, visual image URL, image attribution, voiceover status, overall judge score, strongest score, weakest score, Langfuse status, and Langfuse dry-run score names.

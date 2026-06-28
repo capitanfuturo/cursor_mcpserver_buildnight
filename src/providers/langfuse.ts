@@ -5,8 +5,13 @@ import type { PromoKit } from "../types";
 export type LangfuseResult = {
   enabled: boolean;
   sent: boolean;
+  dryRun: boolean;
   traceId?: string;
   host?: string;
+  traceName?: string;
+  scoreNames?: string[];
+  scoreCount?: number;
+  note?: string;
   error?: string;
 };
 
@@ -53,6 +58,34 @@ async function postJson(input: {
   }
 }
 
+function scoreNames(evaluation: PromoKitEvaluation): string[] {
+  return [
+    "promo-kit-overall",
+    ...evaluation.scores.map((score) => score.name),
+  ];
+}
+
+function baseResult(input: {
+  evaluation: PromoKitEvaluation;
+  traceId: string;
+  host: string;
+  dryRun: boolean;
+}): Pick<
+  LangfuseResult,
+  "dryRun" | "traceId" | "host" | "traceName" | "scoreNames" | "scoreCount"
+> {
+  const names = scoreNames(input.evaluation);
+
+  return {
+    dryRun: input.dryRun,
+    traceId: input.traceId,
+    host: input.host,
+    traceName: "promo-kit-workshop",
+    scoreNames: names,
+    scoreCount: names.length,
+  };
+}
+
 export async function sendEvaluationToLangfuse(input: {
   promoKit: PromoKit;
   evaluation: PromoKitEvaluation;
@@ -60,19 +93,39 @@ export async function sendEvaluationToLangfuse(input: {
   audience: string;
   location: string;
 }): Promise<LangfuseResult> {
+  const traceId = randomUUID();
+  const fallbackHost =
+    process.env.LANGFUSE_HOST || "https://cloud.langfuse.com";
+  const host = fallbackHost.replace(/\/$/, "");
+  const dryRun = baseResult({
+    evaluation: input.evaluation,
+    traceId,
+    host,
+    dryRun: true,
+  });
   const config = langfuseConfig();
 
   if (!config) {
-    return { enabled: false, sent: false };
+    return {
+      enabled: false,
+      sent: false,
+      ...dryRun,
+      note:
+        "Langfuse keys are not configured. This is a dry-run preview of the trace and score names that would be sent.",
+    };
   }
 
-  const traceId = randomUUID();
   const auth = authHeader(config);
-  const host = config.host.replace(/\/$/, "");
+  const liveRun = baseResult({
+    evaluation: input.evaluation,
+    traceId,
+    host: config.host.replace(/\/$/, ""),
+    dryRun: false,
+  });
 
   try {
     await postJson({
-      url: `${host}/api/public/ingestion`,
+      url: `${liveRun.host}/api/public/ingestion`,
       auth,
       body: {
         batch: [
@@ -102,7 +155,7 @@ export async function sendEvaluationToLangfuse(input: {
     });
 
     await postJson({
-      url: `${host}/api/public/scores`,
+      url: `${liveRun.host}/api/public/scores`,
       auth,
       body: {
         traceId,
@@ -115,7 +168,7 @@ export async function sendEvaluationToLangfuse(input: {
 
     for (const score of input.evaluation.scores) {
       await postJson({
-        url: `${host}/api/public/scores`,
+        url: `${liveRun.host}/api/public/scores`,
         auth,
         body: {
           traceId,
@@ -127,14 +180,20 @@ export async function sendEvaluationToLangfuse(input: {
       });
     }
 
-    return { enabled: true, sent: true, traceId, host };
+    return {
+      enabled: true,
+      sent: true,
+      ...liveRun,
+      note: "Langfuse trace and numeric scores were sent.",
+    };
   } catch (error) {
     return {
       enabled: true,
       sent: false,
-      traceId,
-      host,
+      ...liveRun,
       error: error instanceof Error ? error.message : String(error),
+      note:
+        "Langfuse keys were configured, but sending failed. The score names still show what the benchmark attempted to report.",
     };
   }
 }

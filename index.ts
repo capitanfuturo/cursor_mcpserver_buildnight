@@ -94,8 +94,13 @@ const evaluationSchema = z.object({
 const langfuseSchema = z.object({
   enabled: z.boolean(),
   sent: z.boolean(),
+  dryRun: z.boolean(),
   traceId: z.string().optional(),
   host: z.string().optional(),
+  traceName: z.string().optional(),
+  scoreNames: z.array(z.string()).optional(),
+  scoreCount: z.number().optional(),
+  note: z.string().optional(),
   error: z.string().optional(),
 });
 

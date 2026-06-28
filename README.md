@@ -41,6 +41,7 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 `ELEVENLABS_VOICE_ID` is optional. If omitted, the app uses a default ElevenLabs voice ID.
 `FAL_KEY` is optional unless you set `IMAGE_PROVIDER=fal`.
 Langfuse and OpenAI are optional. Without them, the benchmark still works with a local heuristic judge and returns `langfuse.sent: false`.
+When Langfuse keys are missing, `langfuse.dryRun: true` shows the trace name and score names that would be sent.
 
 If you use direnv, put those exports in `.envrc.local` instead and run:
 
@@ -124,7 +125,7 @@ Show the promo kit, the judge score, and whether Langfuse received the trace.
 
 - `promoKit`: the generated campaign kit
 - `evaluation`: judge, overall score, rubric scores, strengths, and improvements
-- `langfuse`: whether the trace and scores were sent to Langfuse
+- `langfuse`: whether the trace and scores were sent to Langfuse, plus dry-run trace and score metadata when keys are missing
 
 ## Demo Prompts
 
@@ -202,10 +203,12 @@ Fix: verify the API key, voice ID, account tier, and remaining credits.
 Langfuse says `sent: false`:
 
 ```text
-langfuse: { "enabled": false, "sent": false }
+langfuse: { "enabled": false, "sent": false, "dryRun": true }
 ```
 
 Fix: set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST`, then restart `npm run dev`.
+
+For the workshop, `dryRun: true` is still useful: show `traceName`, `scoreNames`, and `scoreCount` to explain exactly what the app would send to Langfuse once keys are configured.
 
 OpenAI judge is not configured:
 
@@ -225,7 +228,7 @@ This reports which providers are configured without exposing key values. Exa and
 
 Langfuse implementation note:
 
-This repo keeps the workshop dependency surface small by sending traces and scores through Langfuse's public HTTP API from `src/providers/langfuse.ts`. The same flow can be swapped to the Langfuse SDK later without changing the MCP tool contract.
+This repo keeps the workshop dependency surface small by sending traces and numeric scores through Langfuse's public HTTP API from `src/providers/langfuse.ts`. The same flow can be swapped to the Langfuse SDK later without changing the MCP tool contract.
 
 Build warning about large chunks:
 
