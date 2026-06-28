@@ -1,3 +1,9 @@
+try {
+  process.loadEnvFile?.(".env");
+} catch {
+  // .env is optional. direnv or the parent shell can provide variables instead.
+}
+
 const endpoint = process.env.MCP_URL
   ? `${process.env.MCP_URL.replace(/\/$/, "")}/mcp`
   : "http://localhost:3000/mcp";

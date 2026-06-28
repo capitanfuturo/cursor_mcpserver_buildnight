@@ -11,6 +11,12 @@ import { createCampaignVisual } from "./src/providers/images";
 import { sendEvaluationToLangfuse } from "./src/providers/langfuse";
 import type { PromoKit } from "./src/types";
 
+try {
+  process.loadEnvFile?.(".env");
+} catch {
+  // .env is optional. direnv or the parent shell can provide variables instead.
+}
+
 const server = new MCPServer({
   name: "promo-kit-mcp-finished",
   title: "Promo Kit MCP",

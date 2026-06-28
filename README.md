@@ -42,6 +42,7 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 `FAL_KEY` is optional unless you set `IMAGE_PROVIDER=fal`.
 Langfuse and OpenAI are optional. Without them, the benchmark still works with a local heuristic judge and returns `langfuse.sent: false`.
 When Langfuse keys are missing, `langfuse.dryRun: true` shows the trace name and score names that would be sent.
+The app loads `.env` automatically on Node 22+, and direnv-exported variables still work.
 
 If you use direnv, put those exports in `.envrc.local` instead and run:
 

@@ -10,6 +10,8 @@ direnv allow
 npm run dev
 ```
 
+The app also loads `.env` automatically on Node 22+, so direnv is convenient but not required.
+
 In another terminal:
 
 ```bash
