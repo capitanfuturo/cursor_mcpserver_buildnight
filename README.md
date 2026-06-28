@@ -8,6 +8,8 @@ It combines:
 - Unsplash for campaign visuals by default
 - optional fal.ai support for generated poster images
 - ElevenLabs for voice ad generation
+- Langfuse for trace and score observability
+- an LLM-as-a-judge style evaluator for output quality
 - MCP as the agent tool interface
 
 ## Setup
@@ -28,10 +30,17 @@ UNSPLASH_ACCESS_KEY=...
 FAL_KEY=...
 ELEVENLABS_API_KEY=...
 ELEVENLABS_VOICE_ID=...
+JUDGE_PROVIDER=heuristic
+OPENAI_API_KEY=
+JUDGE_MODEL=gpt-4o-mini
+LANGFUSE_PUBLIC_KEY=
+LANGFUSE_SECRET_KEY=
+LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
 `ELEVENLABS_VOICE_ID` is optional. If omitted, the app uses a default ElevenLabs voice ID.
 `FAL_KEY` is optional unless you set `IMAGE_PROVIDER=fal`.
+Langfuse and OpenAI are optional. Without them, the benchmark still works with a local heuristic judge and returns `langfuse.sent: false`.
 
 If you use direnv, put those exports in `.envrc.local` instead and run:
 
@@ -76,8 +85,8 @@ Use `mcp.json` to connect Cursor to the local server:
 Then ask Cursor Agent:
 
 ```text
-Create a promo kit for a student AI build night in Rome.
-Include a research-backed angle, poster visual, short ad script, and voiceover.
+Use run_demo_preset with cursor-build-night-padova.
+Show the promo kit, the judge score, and whether Langfuse received the trace.
 ```
 
 ## Tools
@@ -86,6 +95,10 @@ Include a research-backed angle, poster visual, short ad script, and voiceover.
 - `generate_poster(brief, visualStyle, format)`
 - `generate_voiceover(script, voiceId, language)`
 - `create_promo_kit(topic, audience, location, tone)`
+- `evaluate_promo_kit(topic, audience, location, promoKitJson)`
+- `create_and_evaluate_promo_kit(topic, audience, location, tone)`
+- `list_demo_presets()`
+- `run_demo_preset(preset)`
 
 ## Expected Output
 
@@ -97,11 +110,32 @@ Include a research-backed angle, poster visual, short ad script, and voiceover.
 - Unsplash image URL with attribution, or fal.ai poster prompt and image URL when `IMAGE_PROVIDER=fal`
 - ElevenLabs voiceover script, plus an audio data URL when the current key and voice have enough API access
 
+`create_and_evaluate_promo_kit` returns:
+
+- `promoKit`: the generated campaign kit
+- `evaluation`: judge, overall score, rubric scores, strengths, and improvements
+- `langfuse`: whether the trace and scores were sent to Langfuse
+
 ## Demo Prompts
 
 ```text
 Create a promo kit for a student AI build night in Rome.
 ```
+
+```text
+Create and evaluate a promo kit for a Cursor build night in Padova for developers.
+```
+
+```text
+Run the cursor-build-night-padova preset and explain the judge scores.
+```
+
+Preset IDs:
+
+- `cursor-build-night-padova`
+- `student-ai-build-night-rome`
+- `matcha-cafe-university`
+- `indie-game-tournament`
 
 ```text
 Create a promo kit for a matcha cafe opening near a university.
@@ -147,6 +181,22 @@ The server now keeps the promo kit usable when TTS is unavailable. The voiceover
 
 Fix: verify the API key, voice ID, account tier, and remaining credits.
 
+Langfuse says `sent: false`:
+
+```text
+langfuse: { "enabled": false, "sent": false }
+```
+
+Fix: set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST`, then restart `npm run dev`.
+
+OpenAI judge is not configured:
+
+```text
+judge: "heuristic"
+```
+
+This is expected for the workshop. Set `JUDGE_PROVIDER=openai` and `OPENAI_API_KEY` only if you want a live LLM judge instead of the deterministic rubric.
+
 Build warning about large chunks:
 
 ```text
@@ -164,6 +214,15 @@ This repo includes local wrapper files for:
 - Codex: `.codex-plugin/plugin.json` and `.mcp.json`
 
 The important idea for attendees: the MCP server is the product, and plugin or connector marketplaces are the distribution layer.
+
+## Workshop Narrative
+
+1. The agent calls MCP tools instead of only writing text.
+2. Exa grounds the campaign in current web context.
+3. Unsplash supplies a visual asset with attribution.
+4. ElevenLabs attempts a voiceover; if account limits block audio, the workflow still keeps the script.
+5. The judge scores the output with a rubric.
+6. Langfuse stores the trace and numeric scores when keys are configured.
 
 ## Manufact Cloud
 

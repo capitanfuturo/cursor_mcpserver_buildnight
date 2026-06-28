@@ -1,6 +1,6 @@
 {
   "name": "promo-kit-mcp",
   "version": "1.0.0",
-  "description": "Generate launch promo kits with Exa research, Unsplash visuals, and ElevenLabs voiceovers.",
+  "description": "Generate and benchmark promo kits with Exa, Unsplash, ElevenLabs, and Langfuse.",
   "skills": "./skills/"
 }

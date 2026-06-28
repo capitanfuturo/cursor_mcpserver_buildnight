@@ -42,3 +42,9 @@ export type PromoKit = {
   poster: PosterResult;
   voiceover: VoiceoverResult;
 };
+
+export type PromoKitBenchmark = {
+  promoKit: PromoKit;
+  evaluation: unknown;
+  langfuse: unknown;
+};
