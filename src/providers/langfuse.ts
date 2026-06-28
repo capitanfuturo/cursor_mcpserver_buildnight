@@ -24,7 +24,10 @@ function langfuseConfig():
   | undefined {
   const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
   const secretKey = process.env.LANGFUSE_SECRET_KEY;
-  const host = process.env.LANGFUSE_HOST || "https://cloud.langfuse.com";
+  const host =
+    process.env.LANGFUSE_BASE_URL ||
+    process.env.LANGFUSE_HOST ||
+    "https://cloud.langfuse.com";
 
   if (!publicKey || !secretKey) {
     return undefined;
@@ -95,7 +98,9 @@ export async function sendEvaluationToLangfuse(input: {
 }): Promise<LangfuseResult> {
   const traceId = randomUUID();
   const fallbackHost =
-    process.env.LANGFUSE_HOST || "https://cloud.langfuse.com";
+    process.env.LANGFUSE_BASE_URL ||
+    process.env.LANGFUSE_HOST ||
+    "https://cloud.langfuse.com";
   const host = fallbackHost.replace(/\/$/, "");
   const dryRun = baseResult({
     evaluation: input.evaluation,

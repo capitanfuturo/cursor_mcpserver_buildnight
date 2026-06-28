@@ -37,7 +37,7 @@ OPENAI_API_KEY=
 JUDGE_MODEL=gpt-4o-mini
 LANGFUSE_PUBLIC_KEY=
 LANGFUSE_SECRET_KEY=
-LANGFUSE_HOST=https://cloud.langfuse.com
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
 ```
 
 `ELEVENLABS_VOICE_ID` is optional. If omitted, the app uses a default ElevenLabs voice ID.
@@ -221,7 +221,7 @@ Langfuse says `sent: false`:
 langfuse: { "enabled": false, "sent": false, "dryRun": true }
 ```
 
-Fix: set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST`, then restart `npm run dev`.
+Fix: set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`, then restart `npm run dev`.
 
 For the workshop, `dryRun: true` is still useful: show `traceName`, `scoreNames`, and `scoreCount` to explain exactly what the app would send to Langfuse once keys are configured.
 
