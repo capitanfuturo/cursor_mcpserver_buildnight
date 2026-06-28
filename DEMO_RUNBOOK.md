@@ -4,6 +4,8 @@ Use this runbook for the live showcase before attendees start from the starter r
 
 ## 1. Start
 
+Prerequisite: Node.js 22 or newer.
+
 ```bash
 npm install
 direnv allow

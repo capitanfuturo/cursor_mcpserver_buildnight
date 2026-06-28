@@ -14,6 +14,8 @@ It combines:
 
 ## Setup
 
+Prerequisite: Node.js 22 or newer.
+
 ```bash
 npm install
 cp .env.example .env
