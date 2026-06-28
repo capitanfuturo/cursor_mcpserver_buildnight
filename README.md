@@ -85,7 +85,8 @@ Use `mcp.json` to connect Cursor to the local server:
 Then ask Cursor Agent:
 
 ```text
-Use check_setup first. Then use run_demo_preset with cursor-build-night-padova.
+Use get_workshop_flow first, then check_setup.
+After that, use run_demo_preset with cursor-build-night-padova.
 Show the promo kit, the judge score, and whether Langfuse received the trace.
 ```
 
@@ -99,6 +100,7 @@ Show the promo kit, the judge score, and whether Langfuse received the trace.
 ## Tools
 
 - `check_setup()`
+- `get_workshop_flow()`
 - `research_market(topic, audience, location, maxResults)`
 - `generate_poster(brief, visualStyle, format)`
 - `generate_voiceover(script, voiceId, language)`
@@ -125,6 +127,14 @@ Show the promo kit, the judge score, and whether Langfuse received the trace.
 - `langfuse`: whether the trace and scores were sent to Langfuse
 
 ## Demo Prompts
+
+```text
+Run get_workshop_flow and explain the live demo sequence.
+```
+
+```text
+Run check_setup and tell me what is ready for the workshop.
+```
 
 ```text
 Create a promo kit for a student AI build night in Rome.
@@ -212,6 +222,10 @@ check_setup()
 ```
 
 This reports which providers are configured without exposing key values. Exa and the selected image provider are required for the finished live demo. ElevenLabs, OpenAI judge, and Langfuse can be unavailable without breaking the main promo kit flow.
+
+Langfuse implementation note:
+
+This repo keeps the workshop dependency surface small by sending traces and scores through Langfuse's public HTTP API from `src/providers/langfuse.ts`. The same flow can be swapped to the Langfuse SDK later without changing the MCP tool contract.
 
 Build warning about large chunks:
 

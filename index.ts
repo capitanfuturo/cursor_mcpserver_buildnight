@@ -122,6 +122,23 @@ const setupStatusSchema = z.object({
   warnings: z.array(z.string()),
 });
 
+const workshopFlowSchema = z.object({
+  title: z.string(),
+  audience: z.string(),
+  recommendedPath: z.array(z.string()),
+  steps: z.array(
+    z.object({
+      step: z.number(),
+      title: z.string(),
+      tool: z.string(),
+      why: z.string(),
+      prompt: z.string(),
+      expected: z.string(),
+    })
+  ),
+  demoPresets: z.array(z.string()),
+});
+
 const presetIdSchema = z.enum([
   "cursor-build-night-padova",
   "student-ai-build-night-rome",
@@ -258,6 +275,70 @@ function buildSetupStatus(): z.infer<typeof setupStatusSchema> {
   };
 }
 
+function buildWorkshopFlow(): z.infer<typeof workshopFlowSchema> {
+  return {
+    title: "Promo Kit MCP Workshop Flow",
+    audience: "Non-technical attendees, developers, and Cursor Agent users",
+    recommendedPath: [
+      "Call check_setup to confirm the local server and provider keys.",
+      "Call list_demo_presets to show that enum inputs become dropdown-style choices.",
+      "Call run_demo_preset with cursor-build-night-padova for the safest live demo.",
+      "Call create_and_evaluate_promo_kit with a custom brief to show agent orchestration.",
+      "Open Langfuse if configured, or explain langfuse.sent=false as the local fallback path.",
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Readiness check",
+        tool: "check_setup",
+        why: "Shows which providers are active without exposing secrets.",
+        prompt: "Run check_setup.",
+        expected:
+          "demoReady=true when Exa and the selected image provider are configured.",
+      },
+      {
+        step: 2,
+        title: "Dropdown demo",
+        tool: "list_demo_presets",
+        why: "Shows attendees that MCP schemas can create easy choices, not only free-text boxes.",
+        prompt: "List the demo presets.",
+        expected:
+          "Four ready-to-run campaign scenarios, including cursor-build-night-padova.",
+      },
+      {
+        step: 3,
+        title: "One-click showcase",
+        tool: "run_demo_preset",
+        why: "Runs Exa, Unsplash, ElevenLabs fallback, the judge, and Langfuse status in one call.",
+        prompt: "Run the cursor-build-night-padova preset.",
+        expected:
+          "A complete promo kit with research, visual, voiceover status, judge score, and Langfuse status.",
+      },
+      {
+        step: 4,
+        title: "Custom brief",
+        tool: "create_and_evaluate_promo_kit",
+        why: "Shows how attendees can adapt the same MCP server to their own product or event.",
+        prompt:
+          "Create and evaluate a promo kit for a matcha cafe opening near a university.",
+        expected:
+          "A custom kit plus rubric scores that make output quality inspectable.",
+      },
+      {
+        step: 5,
+        title: "Benchmarking story",
+        tool: "evaluate_promo_kit",
+        why: "Shows the LLM-as-a-judge idea separately from asset generation.",
+        prompt:
+          "Evaluate this promo kit JSON and explain the strongest and weakest rubric scores.",
+        expected:
+          "Traceable scores locally, and Langfuse scores when LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY are set.",
+      },
+    ],
+    demoPresets: Object.keys(presets),
+  };
+}
+
 function formatList(items: string[]): string {
   if (items.length <= 1) {
     return items[0] || "";
@@ -390,6 +471,22 @@ server.tool(
     outputSchema: setupStatusSchema,
   },
   async () => object(buildSetupStatus())
+);
+
+server.tool(
+  {
+    name: "get_workshop_flow",
+    description:
+      "Return the recommended live-demo sequence for the Promo Kit MCP workshop.",
+    schema: z.object({}),
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+    },
+    outputSchema: workshopFlowSchema,
+  },
+  async () => object(buildWorkshopFlow())
 );
 
 server.tool(
