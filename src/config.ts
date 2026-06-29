@@ -1,10 +1,16 @@
-export type ProviderName = "Exa" | "fal.ai" | "ElevenLabs" | "Unsplash";
+export type ProviderName =
+  | "Exa"
+  | "fal.ai"
+  | "ElevenLabs"
+  | "Unsplash"
+  | "Weatherstack";
 
 const envNames = {
   Exa: "EXA_API_KEY",
   "fal.ai": "FAL_KEY",
   ElevenLabs: "ELEVENLABS_API_KEY",
   Unsplash: "UNSPLASH_ACCESS_KEY",
+  Weatherstack: "WEATHERSTACK_ACCESS_KEY",
 } satisfies Record<ProviderName, string>;
 
 export function requireApiKey(provider: ProviderName): string {

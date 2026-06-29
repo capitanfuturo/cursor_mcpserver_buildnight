@@ -9,6 +9,7 @@ import { generateVoiceover as createVoiceover } from "./src/providers/elevenlabs
 import { researchMarket as searchMarket } from "./src/providers/exa";
 import { createCampaignVisual } from "./src/providers/images";
 import { sendEvaluationToLangfuse } from "./src/providers/langfuse";
+import { getCurrentWeather } from "./src/providers/weatherstack";
 import type { PromoKit } from "./src/types";
 
 try {
@@ -50,6 +51,30 @@ const researchSchema = z.object({
   angle: z.string(),
   insights: z.array(z.string()),
   sources: z.array(sourceSchema),
+});
+
+const currentWeatherSchema = z.object({
+  city: z.string(),
+  country: z.string(),
+  region: z.string().optional(),
+  localtime: z.string().optional(),
+  timezoneId: z.string().optional(),
+  query: z.string(),
+  units: z.enum(["metric", "fahrenheit"]),
+  temperature: z.number(),
+  feelsLike: z.number(),
+  humidity: z.number(),
+  windSpeed: z.number(),
+  windDirection: z.string().optional(),
+  pressure: z.number().optional(),
+  precipitation: z.number().optional(),
+  cloudCover: z.number().optional(),
+  visibility: z.number().optional(),
+  uvIndex: z.number().optional(),
+  isDay: z.boolean(),
+  weatherCode: z.number().optional(),
+  description: z.string(),
+  observationTime: z.string().optional(),
 });
 
 const posterSchema = z.object({
@@ -293,6 +318,13 @@ function buildSetupStatus(): z.infer<typeof setupStatusSchema> {
       configured: isConfigured("LANGFUSE_SECRET_KEY"),
       required: false,
       note: "Optional observability for traces and scores.",
+    },
+    {
+      name: "Weatherstack",
+      envVar: "WEATHERSTACK_ACCESS_KEY",
+      configured: isConfigured("WEATHERSTACK_ACCESS_KEY"),
+      required: false,
+      note: "Required for get_current_weather.",
     },
   ];
 
@@ -672,6 +704,32 @@ server.tool(
         maxResults,
       })
     );
+  }
+);
+
+server.tool(
+  {
+    name: "get_current_weather",
+    description:
+      "Fetch current weather conditions for a city using Weatherstack.",
+    schema: z.object({
+      city: z
+        .string()
+        .describe("City name or location query, for example Venezia or Rome"),
+      units: z
+        .enum(["metric", "fahrenheit"])
+        .default("metric")
+        .describe("Temperature and wind speed units"),
+    }),
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: true,
+    },
+    outputSchema: currentWeatherSchema,
+  },
+  async ({ city, units }) => {
+    return object(await getCurrentWeather({ city, units }));
   }
 );
 

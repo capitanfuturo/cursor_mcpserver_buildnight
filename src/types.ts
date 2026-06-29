@@ -48,3 +48,27 @@ export type PromoKitBenchmark = {
   evaluation: unknown;
   langfuse: unknown;
 };
+
+export type CurrentWeather = {
+  city: string;
+  country: string;
+  region?: string;
+  localtime?: string;
+  timezoneId?: string;
+  query: string;
+  units: "metric" | "fahrenheit";
+  temperature: number;
+  feelsLike: number;
+  humidity: number;
+  windSpeed: number;
+  windDirection?: string;
+  pressure?: number;
+  precipitation?: number;
+  cloudCover?: number;
+  visibility?: number;
+  uvIndex?: number;
+  isDay: boolean;
+  weatherCode?: number;
+  description: string;
+  observationTime?: string;
+};
