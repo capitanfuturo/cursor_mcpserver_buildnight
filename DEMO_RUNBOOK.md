@@ -52,6 +52,8 @@ an application that consumes the MCP server.
 3. Call `list_demo_presets`.
 4. Call `run_demo_preset` with `cursor-build-night-padova`.
 5. Call `create_and_evaluate_promo_kit` with a custom brief.
+6. Call `run_benchmark_suite` to compare three tone variants and open the
+   resulting Langfuse traces.
 
 For the visual UI demo:
 
@@ -70,6 +72,18 @@ location: Padova, Italy
 tone: warm and social
 ```
 
+Suggested benchmark suite:
+
+```text
+topic: cursor build night
+audience: developers
+location: Padova, Italy
+tones:
+- energetic and practical
+- friendly and beginner-safe
+- bold and urgent
+```
+
 ## 3. Speaking Notes
 
 - MCP turns the agent into a tool user, not only a text generator.
@@ -77,6 +91,8 @@ tone: warm and social
 - Unsplash supplies a usable visual when fal.ai is unavailable.
 - ElevenLabs attempts voice generation; if account limits block audio, the server keeps the script and marks voiceover as unavailable.
 - The judge turns subjective output quality into visible rubric scores.
+- The benchmark suite turns that judge into a comparison workflow: same brief,
+  multiple variants, ranked winner, and separate Langfuse traces.
 - Langfuse stores the trace and scores when keys are configured; otherwise `dryRun: true` shows the trace and score names that would be sent.
 
 ## 4. Known Live-Demo State
@@ -86,7 +102,8 @@ With the current local keys:
 - Exa works.
 - Unsplash works.
 - ElevenLabs may return `status: "unavailable"` because of voice tier or quota limits.
-- Langfuse returns `enabled: false` and `dryRun: true` until `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured.
+- Langfuse sends live traces when `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`
+  are configured; otherwise it returns `dryRun: true`.
 
 This is acceptable for the workshop because the main generation and benchmarking path still completes.
 
@@ -95,7 +112,7 @@ This is acceptable for the workshop because the main generation and benchmarking
 `npm run smoke` should print JSON with:
 
 - `ok: true`
-- `tools: 10`
+- `tools: 11`
 - `demoReady: true`
 - a numeric judge `score`
 - `langfuse.dryRun` or `langfuse.sent`

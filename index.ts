@@ -116,6 +116,42 @@ const benchmarkSchema = z.object({
   langfuse: langfuseSchema,
 });
 
+const benchmarkSuiteComparisonSchema = z.object({
+  rank: z.number(),
+  variant: z.string(),
+  tone: z.string(),
+  title: z.string(),
+  overallScore: z.number(),
+  verdict: z.enum(["excellent", "good", "needs_work"]),
+  briefFit: z.number(),
+  grounding: z.number(),
+  assetCompleteness: z.number(),
+  actionability: z.number(),
+  toneFit: z.number(),
+  demoResilience: z.number(),
+  visualProvider: z.enum(["fal", "unsplash", "placeholder"]),
+  voiceStatus: z.enum(["generated", "unavailable"]),
+  langfuseTraceId: z.string().optional(),
+  recommendation: z.string(),
+});
+
+const benchmarkSuiteSchema = z.object({
+  topic: z.string(),
+  audience: z.string(),
+  location: z.string(),
+  winner: z.string(),
+  comparison: z.array(benchmarkSuiteComparisonSchema),
+  candidates: z.array(
+    z.object({
+      variant: z.string(),
+      tone: z.string(),
+      promoKit: promoKitSchema,
+      evaluation: evaluationSchema,
+      langfuse: langfuseSchema,
+    })
+  ),
+});
+
 const setupProviderSchema = z.object({
   name: z.string(),
   envVar: z.string(),
@@ -295,6 +331,7 @@ function buildWorkshopFlow(): z.infer<typeof workshopFlowSchema> {
       "Call list_demo_presets to show that enum inputs become dropdown-style choices.",
       "Call run_demo_preset with cursor-build-night-padova for the safest live demo.",
       "Call create_and_evaluate_promo_kit with a custom brief to show agent orchestration.",
+      "Call run_benchmark_suite to compare three tone variants and send multiple judge traces to Langfuse.",
       "Open Langfuse if configured, or explain langfuse.sent=false as the local fallback path.",
     ],
     steps: [
@@ -337,6 +374,16 @@ function buildWorkshopFlow(): z.infer<typeof workshopFlowSchema> {
       },
       {
         step: 5,
+        title: "Benchmark suite",
+        tool: "run_benchmark_suite",
+        why: "Shows the LLM-as-a-judge idea as a comparison workflow, not only a single score.",
+        prompt:
+          "Run a benchmark suite for a Cursor build night in Padova using three tone variants.",
+        expected:
+          "A ranked comparison table with judge scores, a winner, and Langfuse trace IDs for each candidate.",
+      },
+      {
+        step: 6,
         title: "Benchmarking story",
         tool: "evaluate_promo_kit",
         why: "Shows the LLM-as-a-judge idea separately from asset generation.",
@@ -466,6 +513,34 @@ async function judgePromoKit(input: {
   }
 
   return evaluateWithHeuristics(input);
+}
+
+function scoreValue(
+  evaluation: z.infer<typeof evaluationSchema>,
+  name: string
+): number {
+  return (
+    evaluation.scores.find((score) => score.name === name)?.value ?? 0
+  );
+}
+
+function recommendationFor(input: {
+  rank: number;
+  evaluation: z.infer<typeof evaluationSchema>;
+  tone: string;
+}): string {
+  if (input.rank === 1) {
+    return `Lead with this ${input.tone} variant; it scored highest overall.`;
+  }
+
+  const weakest = [...input.evaluation.scores].sort(
+    (a, b) => a.value - b.value
+  )[0];
+
+  return `Improve ${weakest.name.replace(
+    /_/g,
+    " "
+  )} before using this ${input.tone} variant.`;
 }
 
 server.tool(
@@ -749,6 +824,105 @@ server.tool(
     });
 
     return object({ promoKit, evaluation, langfuse });
+  }
+);
+
+server.tool(
+  {
+    name: "run_benchmark_suite",
+    description:
+      "Generate 2-3 promo kit variants, judge them with the same rubric, send each result to Langfuse, and return a ranked comparison table.",
+    schema: z.object({
+      topic: z.string().describe("Campaign topic, event, or product"),
+      audience: z.string().describe("Target audience"),
+      location: z.string().describe("Target city or region"),
+      tones: z
+        .array(z.string())
+        .min(2)
+        .max(3)
+        .default([
+          "energetic and practical",
+          "friendly and beginner-safe",
+          "bold and urgent",
+        ])
+        .describe("Two or three tone variants to compare"),
+    }),
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: true,
+    },
+    outputSchema: benchmarkSuiteSchema,
+  },
+  async ({ topic, audience, location, tones }) => {
+    const candidates = [];
+
+    for (const [index, tone] of tones.entries()) {
+      const variant = `variant_${index + 1}`;
+      const promoKit = await buildPromoKit({
+        topic,
+        audience,
+        location,
+        tone,
+      });
+      const evaluation = await judgePromoKit({
+        promoKit,
+        topic,
+        audience,
+        location,
+      });
+      const langfuse = await sendEvaluationToLangfuse({
+        promoKit,
+        evaluation,
+        topic,
+        audience,
+        location,
+      });
+
+      candidates.push({ variant, tone, promoKit, evaluation, langfuse });
+    }
+
+    const ranked = [...candidates].sort(
+      (a, b) => b.evaluation.overallScore - a.evaluation.overallScore
+    );
+    const comparison = ranked.map((candidate, index) => {
+      const rank = index + 1;
+
+      return {
+        rank,
+        variant: candidate.variant,
+        tone: candidate.tone,
+        title: candidate.promoKit.title,
+        overallScore: candidate.evaluation.overallScore,
+        verdict: candidate.evaluation.verdict,
+        briefFit: scoreValue(candidate.evaluation, "brief_fit"),
+        grounding: scoreValue(candidate.evaluation, "grounding"),
+        assetCompleteness: scoreValue(
+          candidate.evaluation,
+          "asset_completeness"
+        ),
+        actionability: scoreValue(candidate.evaluation, "actionability"),
+        toneFit: scoreValue(candidate.evaluation, "tone_fit"),
+        demoResilience: scoreValue(candidate.evaluation, "demo_resilience"),
+        visualProvider: candidate.promoKit.poster.provider,
+        voiceStatus: candidate.promoKit.voiceover.status,
+        langfuseTraceId: candidate.langfuse.traceId,
+        recommendation: recommendationFor({
+          rank,
+          evaluation: candidate.evaluation,
+          tone: candidate.tone,
+        }),
+      };
+    });
+
+    return object({
+      topic,
+      audience,
+      location,
+      winner: comparison[0]?.variant ?? "",
+      comparison,
+      candidates,
+    });
   }
 );
 

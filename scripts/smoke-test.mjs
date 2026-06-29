@@ -83,6 +83,7 @@ const requiredTools = [
   "create_promo_kit",
   "evaluate_promo_kit",
   "create_and_evaluate_promo_kit",
+  "run_benchmark_suite",
 ];
 
 for (const toolName of requiredTools) {

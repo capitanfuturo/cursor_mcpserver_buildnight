@@ -114,11 +114,18 @@ The UI can:
 - load `list_demo_presets`
 - call `run_demo_preset`
 - call `create_and_evaluate_promo_kit`
+- call `run_benchmark_suite`
 - call `research_market`
 - call `generate_voiceover`
 
 This is intentionally small enough for attendees to modify with Cursor during
 the workshop.
+
+To point the local UI at a deployed MCP server instead of your local server:
+
+```bash
+MCP_SERVER_URL=https://fast-zero-4d5xn.run.mcp-use.com npm run web
+```
 
 ## Cursor Demo
 
@@ -159,6 +166,7 @@ Show the promo kit, the judge score, and whether Langfuse received the trace.
 - `create_promo_kit(topic, audience, location, tone)`
 - `evaluate_promo_kit(topic, audience, location, promoKitJson)`
 - `create_and_evaluate_promo_kit(topic, audience, location, tone)`
+- `run_benchmark_suite(topic, audience, location, tones)`
 - `list_demo_presets()`
 - `run_demo_preset(preset)`
 
@@ -177,6 +185,12 @@ Show the promo kit, the judge score, and whether Langfuse received the trace.
 - `promoKit`: the generated campaign kit
 - `evaluation`: judge, overall score, rubric scores, strengths, and improvements
 - `langfuse`: whether the trace and scores were sent to Langfuse, plus dry-run trace and score metadata when keys are missing
+
+`run_benchmark_suite` returns:
+
+- `comparison`: ranked rows for two or three tone variants
+- `winner`: the winning variant ID
+- `candidates`: each generated promo kit, judge evaluation, and Langfuse trace metadata
 
 ## Demo Prompts
 
@@ -198,6 +212,12 @@ Create and evaluate a promo kit for a Cursor build night in Padova for developer
 
 ```text
 Run the cursor-build-night-padova preset and explain the judge scores.
+```
+
+```text
+Run a benchmark suite for a Cursor build night in Padova for developers.
+Compare energetic and practical, friendly and beginner-safe, and bold and urgent tones.
+Show the winner, the comparison table, and the Langfuse trace IDs.
 ```
 
 Preset IDs:

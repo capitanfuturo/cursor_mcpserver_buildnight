@@ -280,6 +280,31 @@ audio {
   margin-top: 16px;
 }
 
+.benchmark-table {
+  display: grid;
+  gap: 8px;
+}
+
+.benchmark-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 58px;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #e1dacc;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fffaf0;
+}
+
+.benchmark-row strong {
+  font-size: 14px;
+}
+
+.benchmark-row span {
+  color: #5e605d;
+  font-size: 13px;
+}
+
 .caption-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

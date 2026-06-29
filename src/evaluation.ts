@@ -36,6 +36,46 @@ function verdictFor(score: number): PromoKitEvaluation["verdict"] {
   return "needs_work";
 }
 
+function toneFitScore(input: {
+  declaredTone: string;
+  topic: string;
+  audience: string;
+}): number {
+  const tone = input.declaredTone.toLowerCase();
+  const context = `${input.topic} ${input.audience}`.toLowerCase();
+  const practicalMatch = includesAny(context, [
+    "developer",
+    "builder",
+    "build night",
+    "workshop",
+  ]);
+  const beginnerMatch = includesAny(context, [
+    "student",
+    "beginner",
+    "learn",
+  ]);
+  const urgencyMatch = includesAny(context, [
+    "tournament",
+    "opening",
+    "launch",
+    "this weekend",
+  ]);
+
+  if (includesAny(tone, ["practical", "hands-on"]) && practicalMatch) {
+    return 1;
+  }
+
+  if (includesAny(tone, ["friendly", "beginner"]) && beginnerMatch) {
+    return 0.94;
+  }
+
+  if (includesAny(tone, ["bold", "urgent"]) && urgencyMatch) {
+    return 0.9;
+  }
+
+  return 0.72;
+}
+
 export function evaluateWithHeuristics(input: {
   promoKit: PromoKit;
   topic: string;
@@ -49,6 +89,8 @@ export function evaluateWithHeuristics(input: {
     promoKit.captions.join(" "),
     promoKit.voiceover.script,
   ].join(" ");
+  const declaredTone =
+    promoKit.positioning.match(/Tone:\s*([^.]*)/i)?.[1]?.trim() || "";
 
   const hasTopic = includesAny(combined, [topic]);
   const hasAudience = includesAny(combined, [audience]);
@@ -85,6 +127,18 @@ export function evaluateWithHeuristics(input: {
       name: "actionability",
       value: clampScore(includesAny(combined, ctaTerms) ? 0.9 : 0.45),
       comment: "Looks for a simple next action a human could take.",
+    },
+    {
+      name: "tone_fit",
+      value: clampScore(
+        toneFitScore({
+          declaredTone,
+          topic,
+          audience,
+        })
+      ),
+      comment:
+        "Checks whether the tone matches the audience and campaign context.",
     },
     {
       name: "demo_resilience",

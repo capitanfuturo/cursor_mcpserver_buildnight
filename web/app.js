@@ -13,6 +13,7 @@ const elements = {
   generateButton: document.querySelector("#generateButton"),
   researchButton: document.querySelector("#researchButton"),
   voiceButton: document.querySelector("#voiceButton"),
+  benchmarkButton: document.querySelector("#benchmarkButton"),
   kitTitle: document.querySelector("#kitTitle"),
   posterImage: document.querySelector("#posterImage"),
   imagePlaceholder: document.querySelector("#imagePlaceholder"),
@@ -21,6 +22,7 @@ const elements = {
   scoreLabel: document.querySelector("#scoreLabel"),
   positioningText: document.querySelector("#positioningText"),
   langfuseStatus: document.querySelector("#langfuseStatus"),
+  benchmarkTable: document.querySelector("#benchmarkTable"),
   insightsList: document.querySelector("#insightsList"),
   sourcesList: document.querySelector("#sourcesList"),
   voiceScript: document.querySelector("#voiceScript"),
@@ -35,6 +37,7 @@ function setBusy(isBusy, label = "Working...") {
     elements.generateButton,
     elements.researchButton,
     elements.voiceButton,
+    elements.benchmarkButton,
   ]) {
     button.disabled = isBusy;
   }
@@ -247,6 +250,8 @@ function renderCaptions(captions = []) {
 }
 
 function renderEvaluation(evaluation, langfuse) {
+  elements.benchmarkTable.innerHTML = "";
+
   if (!evaluation) {
     elements.scoreValue.textContent = "--";
     elements.scoreLabel.textContent = "No score yet";
@@ -264,6 +269,40 @@ function renderEvaluation(evaluation, langfuse) {
       : "Langfuse disabled for this run";
 
   elements.langfuseStatus.textContent = langfuseText;
+}
+
+function renderBenchmarkSuite(result) {
+  const winner = result.candidates.find(
+    (candidate) => candidate.variant === result.winner
+  );
+  const firstCandidate = winner || result.candidates[0];
+
+  renderPromoKit({
+    promoKit: firstCandidate.promoKit,
+    evaluation: firstCandidate.evaluation,
+    langfuse: firstCandidate.langfuse,
+  });
+
+  elements.scoreLabel.textContent = `winner: ${result.winner}`;
+  elements.langfuseStatus.textContent = `${result.comparison.length} variants scored; open Langfuse to compare traces.`;
+  elements.benchmarkTable.innerHTML = "";
+
+  for (const row of result.comparison) {
+    const div = document.createElement("div");
+    div.className = "benchmark-row";
+
+    const rank = document.createElement("strong");
+    rank.textContent = `#${row.rank}`;
+
+    const label = document.createElement("span");
+    label.textContent = `${row.variant}: ${row.tone}`;
+
+    const score = document.createElement("strong");
+    score.textContent = `${Math.round(row.overallScore * 100)}`;
+
+    div.append(rank, label, score);
+    elements.benchmarkTable.append(div);
+  }
 }
 
 function renderPromoKit(result) {
@@ -355,6 +394,26 @@ elements.voiceButton.addEventListener("click", async () => {
         ? "Voiceover generated through MCP."
         : "Voiceover script returned; audio unavailable."
     );
+  } catch (error) {
+    setStatus("error", error instanceof Error ? error.message : String(error));
+  } finally {
+    setBusy(false);
+  }
+});
+
+elements.benchmarkButton.addEventListener("click", async () => {
+  try {
+    setBusy(true, "Running benchmark suite...");
+    const result = await callTool("run_benchmark_suite", {
+      ...selectedBrief(),
+      tones: [
+        "energetic and practical",
+        "friendly and beginner-safe",
+        "bold and urgent",
+      ],
+    });
+    renderBenchmarkSuite(result);
+    setStatus("ok", "Benchmark suite completed through MCP.");
   } catch (error) {
     setStatus("error", error instanceof Error ? error.message : String(error));
   } finally {
